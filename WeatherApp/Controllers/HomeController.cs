@@ -5,6 +5,7 @@ using System.Net;
 using System.Web;
 using System.Web.Mvc;
 using System.Web.Script.Serialization;
+using System.Xml;
 using WeatherApp.Models;
 
 namespace WeatherApp.Controllers
@@ -16,6 +17,45 @@ namespace WeatherApp.Controllers
         {
             return View();
         }
+        public ActionResult Weather()
+        {
+
+            string IP = "";
+            string city = "";
+
+            string strHostName = "";
+            strHostName = System.Net.Dns.GetHostName();
+
+            IPHostEntry ipEntry = System.Net.Dns.GetHostEntry(strHostName);
+
+            IPAddress[] addr = ipEntry.AddressList;
+
+            IP = addr[2].ToString();
+
+
+
+            String URLString = "http://api.ipstack.com/" + IP + "?access_key=" + "5998453809bee05aec1562f4d8edaf27";
+            XmlTextReader reader = new XmlTextReader(URLString);
+
+
+            var json = new WebClient().DownloadString("http://api.ipstack.com/" + IP + "?access_key=" + "22715e4603057889f8605e933d7652b7");
+
+            dynamic json1 = JObject.Parse(json);
+            string cityname = json1.city;
+
+
+            ViewBag.cityname = cityname;
+            ViewBag.IP = IP;
+            ViewBag.contry = json1.country_name;
+
+
+
+
+
+
+            return View();
+        }
+
         [HttpPost]
         public String WeatherDetail(string City)
         {
@@ -29,29 +69,8 @@ namespace WeatherApp.Controllers
             using (WebClient client = new WebClient())
             {
                 string json = client.DownloadString(url);
-
-                //********************//  
-                //     JSON RECIVED   
-                //********************//  
-                //{"coord":{ "lon":72.85,"lat":19.01},  
-                //"weather":[{"id":711,"main":"Smoke","description":"smoke","icon":"50d"}],  
-                //"base":"stations",  
-                //"main":{"temp":31.75,"feels_like":31.51,"temp_min":31,"temp_max":32.22,"pressure":1014,"humidity":43},  
-                //"visibility":2500,  
-                //"wind":{"speed":4.1,"deg":140},  
-                //"clouds":{"all":0},  
-                //"dt":1578730750,  
-                //"sys":{"type":1,"id":9052,"country":"IN","sunrise":1578707041,"sunset":1578746875},  
-                //"timezone":19800,  
-                //"id":1275339,  
-                //"name":"Mumbai",  
-                //"cod":200}  
-
-                //Converting to OBJECT from JSON string.  
                 RootObject weatherInfo = (new JavaScriptSerializer()).Deserialize<RootObject>(json);
 
-                //Special VIEWMODEL design to send only required fields not all fields which received from   
-                //www.openweathermap.org api  
                 WeatherModelView rslt = new WeatherModelView();
 
                 rslt.Country = weatherInfo.sys.country;
